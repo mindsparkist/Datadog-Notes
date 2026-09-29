@@ -2133,3 +2133,1369 @@ Dashboard / Monitor / Alert
 [11]: https://docs.datadoghq.com/integrations/guide/azure-integrations/?utm_source=chatgpt.com "Azure Integrations"
 [12]: https://docs.datadoghq.com/getting_started/integrations/azure/?utm_source=chatgpt.com "Getting Started with Azure"
 [13]: https://docs.datadoghq.com/getting_started/integrations/azure/?tab=createanappregistration&utm_source=chatgpt.com "Getting Started with Azure"
+
+Yes — these are the next important Datadog topics. I’ll keep them in the same **GitHub notes + interview-friendly** format.
+
+# Datadog — Docker Monitoring, RUM & APM
+
+---
+
+# 1. Docker Monitoring
+
+## What is Docker Monitoring?
+
+Datadog Docker Monitoring collects infrastructure and container-level telemetry from Docker hosts and containers.
+
+You can monitor:
+
+* Container CPU
+* Container memory
+* Network
+* Disk I/O
+* Container status
+* Restart count
+* Container events
+* Host CPU/memory/disk/network
+
+The Datadog Docker Agent can collect container, CPU, disk, I/O, memory, network and other host metrics. ([Datadog Monitoring][1])
+
+---
+
+## Docker Agent Setup — Linux
+
+### Step 1: Run Datadog Agent
+
+```bash
+docker run -d \
+  --cgroupns host \
+  --pid host \
+  --name dd-agent \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  -v /proc/:/host/proc/:ro \
+  -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro \
+  -e DD_SITE=<DATADOG_SITE> \
+  -e DD_API_KEY=<DATADOG_API_KEY> \
+  registry.datadoghq.com/agent:7
+```
+
+Datadog recommends running one Agent on each host that you want to monitor. ([Datadog Monitoring][1])
+
+### Step 2: Verify Agent
+
+```bash
+docker ps
+```
+
+Then:
+
+```bash
+docker logs dd-agent
+```
+
+You can also check Agent status from inside the container.
+
+---
+
+## Where to See Docker Data?
+
+In Datadog:
+
+```text
+Infrastructure
+    ↓
+Containers
+```
+
+You can also use:
+
+```text
+Infrastructure → Hosts
+```
+
+and select the Docker host.
+
+### Useful Docker Metrics
+
+Examples include:
+
+```text
+container.cpu.usage
+container.memory.usage
+container.net.bytes_rcvd
+container.net.bytes_sent
+```
+
+Exact available metrics depend on the runtime and Agent configuration.
+
+---
+
+## Docker Monitoring Architecture
+
+```text
+Docker Host
+     |
+     +-- Container A
+     +-- Container B
+     +-- Container C
+     |
+     ↓
+Datadog Agent Container
+     |
+     ↓
+Datadog
+     |
+     +-- Containers
+     +-- Infrastructure
+     +-- Metrics
+     +-- Monitors
+     +-- Logs
+```
+
+### Interview Question
+
+**Q: Where should the Datadog Agent run when monitoring Docker?**
+
+**A:** Normally one Datadog Agent runs on each Docker host/node and collects telemetry from the Docker runtime and host. ([Datadog Monitoring][1])
+
+---
+
+# 2. Real User Monitoring — RUM
+
+## What is RUM?
+
+**Real User Monitoring (RUM)** monitors the actual experience of real users interacting with your web/mobile application.
+
+Unlike Synthetic Monitoring:
+
+```text
+Synthetic:
+Datadog → Simulated User → Application
+```
+
+RUM:
+
+```text
+Real User → Application → Datadog RUM
+```
+
+RUM can monitor page performance, user actions, resource requests, frontend errors, user journeys and more. ([Datadog Monitoring][2])
+
+---
+
+# 3. RUM Setup — Web Application
+
+For a browser application, Datadog uses the **Browser RUM SDK**.
+
+## Step 1 — Create RUM Application
+
+Go to:
+
+```text
+Digital Experience
+      ↓
+Add an Application
+      ↓
+JavaScript (JS)
+```
+
+Enter:
+
+```text
+Application Name
+```
+
+Datadog generates:
+
+```text
+Application ID
+Client Token
+```
+
+([Datadog Monitoring][3])
+
+---
+
+## Step 2 — Install Browser SDK
+
+For a modern JavaScript application:
+
+```bash
+npm install --save @datadog/browser-rum
+```
+
+Then initialize it in your application.
+
+Example:
+
+```javascript
+import { datadogRum } from '@datadog/browser-rum';
+
+datadogRum.init({
+  applicationId: '<APPLICATION_ID>',
+  clientToken: '<CLIENT_TOKEN>',
+  site: '<DATADOG_SITE>',
+  service: 'my-web-app',
+  env: 'production',
+  version: '1.0.0',
+  sessionSampleRate: 100,
+  sessionReplaySampleRate: 20
+});
+```
+
+The Browser SDK supports client-side setup as well as other current instrumentation approaches. ([Datadog Monitoring][3])
+
+---
+
+# 4. What Should I Monitor With RUM?
+
+This is the important part for interviews.
+
+## A. Page/View Performance
+
+Monitor:
+
+```text
+Page Load Time
+Largest Contentful Paint
+First Input Delay / Interaction to Next Paint
+Cumulative Layout Shift
+DOM loading
+Resource loading
+```
+
+Datadog RUM automatically collects page-performance information and Core Web Vitals. ([Datadog Monitoring][4])
+
+---
+
+## B. User Actions
+
+Monitor:
+
+```text
+Button clicks
+Form interactions
+Search
+Login
+Checkout
+Navigation
+```
+
+Example:
+
+```text
+User
+ ↓
+Login
+ ↓
+Dashboard
+ ↓
+Search
+ ↓
+Checkout
+```
+
+---
+
+## C. Frontend Errors
+
+Monitor:
+
+```text
+JavaScript errors
+Unhandled exceptions
+Console errors
+Error frequency
+Error affected users
+```
+
+---
+
+## D. Network Requests
+
+Monitor:
+
+```text
+API requests
+XHR/fetch
+Response time
+HTTP status
+Failed requests
+Resource loading
+```
+
+---
+
+## E. User/Device Information
+
+You can analyze:
+
+```text
+Browser
+Operating System
+Device
+Country
+Region
+Application version
+```
+
+RUM provides usage and user-journey information including device, OS and geography. ([Datadog Monitoring][2])
+
+---
+
+# 5. Where to See RUM Data?
+
+Main area:
+
+```text
+Digital Experience
+      ↓
+RUM / Applications
+```
+
+Then use:
+
+```text
+RUM Explorer
+```
+
+You can investigate:
+
+```text
+Sessions
+Views
+Actions
+Resources
+Errors
+Performance
+User journeys
+```
+
+Datadog also generates RUM dashboards covering performance, usage and errors. ([Datadog Monitoring][5])
+
+---
+
+## Example RUM Investigation
+
+```text
+Users report:
+"Website is slow"
+
+        ↓
+
+RUM Explorer
+
+        ↓
+
+Check Page Load Time
+
+        ↓
+
+Check Core Web Vitals
+
+        ↓
+
+Check API Requests
+
+        ↓
+
+Check JS Errors
+
+        ↓
+
+Correlate with APM
+
+        ↓
+
+Find backend service causing latency
+```
+
+This is one of the major benefits of combining **RUM + APM**. ([Datadog Monitoring][2])
+
+---
+
+# 6. RUM + APM
+
+A common Datadog architecture is:
+
+```text
+Real User
+    ↓
+Browser
+    ↓
+RUM
+    ↓
+Frontend API Request
+    ↓
+APM
+    ↓
+Backend Service
+    ↓
+Database
+```
+
+So you can investigate a slow user experience from the browser through the backend.
+
+---
+
+# 7. APM Monitoring
+
+## What is APM?
+
+**Application Performance Monitoring (APM)** monitors application performance and distributed traces.
+
+APM helps identify:
+
+* Slow services
+* Slow requests
+* Database latency
+* Errors
+* Exceptions
+* Dependencies
+* Service-to-service calls
+* Throughput
+* Latency
+* Trace information
+
+Datadog APM is based around instrumenting the application and sending traces to the Datadog Agent. ([Datadog Monitoring][6])
+
+---
+
+# 8. APM Setup — Linux
+
+There are two major parts:
+
+```text
+Application
+     ↓
+Datadog APM SDK / Tracer
+     ↓
+Datadog Agent
+     ↓
+Datadog
+```
+
+## Step 1 — Install Datadog Agent
+
+For example, on Linux:
+
+```bash
+sudo systemctl status datadog-agent
+```
+
+Verify:
+
+```bash
+sudo datadog-agent status
+```
+
+---
+
+## Step 2 — Enable APM
+
+For current Linux environments, Datadog provides **Single Step Instrumentation (SSI)**, which can install the Agent and instrument supported applications with one setup flow. ([Datadog Monitoring][7])
+
+Alternatively, you can install the language-specific Datadog tracing library.
+
+---
+
+## Example — Java Application
+
+Download/configure the Datadog Java tracer and start the application with:
+
+```bash
+java \
+-javaagent:/path/to/dd-java-agent.jar \
+-Ddd.service=my-java-app \
+-Ddd.env=production \
+-Ddd.version=1.0 \
+-jar application.jar
+```
+
+Java uses automatic instrumentation through the Java agent. ([Datadog Monitoring][8])
+
+---
+
+## Example — .NET on Linux
+
+Install the Datadog .NET tracer and configure the application with environment variables such as:
+
+```bash
+DD_SERVICE=my-dotnet-app
+DD_ENV=production
+DD_VERSION=1.0
+```
+
+The .NET tracer supports automatic instrumentation on both Linux and Windows. ([Datadog Monitoring][9])
+
+---
+
+# 9. APM Setup — Windows
+
+Windows APM commonly involves:
+
+```text
+Windows Server
+      ↓
+Datadog Agent
+      ↓
+.NET / Java Application
+      ↓
+Datadog APM
+```
+
+Datadog currently provides Single Step Instrumentation for **Java and .NET applications on Windows**. ([Datadog Monitoring][10])
+
+---
+
+## .NET IIS Example
+
+For a .NET application running under IIS:
+
+1. Install Datadog Agent with APM instrumentation enabled.
+2. Configure the .NET tracer.
+3. Restart the IIS application.
+4. Generate application traffic.
+5. Check APM.
+
+Datadog's Windows SSI can specifically instrument .NET applications running in IIS. ([Datadog Monitoring][10])
+
+### Verify Agent
+
+Open Administrator PowerShell:
+
+```powershell
+& "$env:ProgramFiles\Datadog\Datadog Agent\bin\agent.exe" status
+```
+
+Look for the **APM Agent** section.
+
+Then generate traffic to the application.
+
+---
+
+# 10. Windows Java APM
+
+For Java:
+
+```text
+Windows Server
+      ↓
+Datadog Agent
+      ↓
+dd-java-agent.jar
+      ↓
+Java Application
+      ↓
+APM
+```
+
+Example:
+
+```powershell
+java `
+-javaagent:C:\Datadog\dd-java-agent.jar `
+-Ddd.service=my-java-app `
+-Ddd.env=production `
+-Ddd.version=1.0 `
+-jar app.jar
+```
+
+Java automatic instrumentation uses the Java agent to instrument application classes at runtime. ([Datadog Monitoring][8])
+
+---
+
+# 11. Where to See APM?
+
+In Datadog:
+
+```text
+APM
+  ↓
+Services
+```
+
+After your application receives traffic, the service should appear in the APM Services view. Datadog recommends verifying the service there after instrumentation. ([Datadog Monitoring][10])
+
+Then investigate:
+
+```text
+APM
+ ↓
+Services
+ ↓
+Select Service
+ ↓
+Service Overview
+```
+
+You can investigate:
+
+```text
+Requests
+Latency
+Errors
+Throughput
+Resources
+Dependencies
+Traces
+```
+
+---
+
+# 12. APM Troubleshooting Flow
+
+If application is not appearing:
+
+```text
+1. Check Datadog Agent
+        ↓
+2. Check APM Agent
+        ↓
+3. Check application tracer/SDK
+        ↓
+4. Check DD_SERVICE
+        ↓
+5. Check DD_ENV
+        ↓
+6. Check DD_VERSION
+        ↓
+7. Generate application traffic
+        ↓
+8. Check APM → Services
+        ↓
+9. Check Agent logs
+        ↓
+10. Check network/connectivity
+```
+
+For SSI specifically, Datadog provides troubleshooting through Fleet Automation and injector-level logs. ([Datadog Monitoring][11])
+
+---
+
+# 13. Docker + APM
+
+For containerized applications:
+
+```text
+Docker Host
+     ↓
+Datadog Agent Container
+     ↓
+Application Container
+     ↓
+APM Traces
+     ↓
+Datadog
+```
+
+The application container needs to be able to send traces to the Agent.
+
+For example:
+
+```text
+DD_AGENT_HOST=datadog-agent
+DD_TRACE_AGENT_PORT=8126
+```
+
+Datadog documents port **8126** as the default trace-agent port in Docker examples. ([Datadog Monitoring][12])
+
+---
+
+# Quick Interview Revision
+
+| Topic                 | What to Remember                                       |
+| --------------------- | ------------------------------------------------------ |
+| **Docker Monitoring** | Monitor containers + Docker host                       |
+| **RUM**               | Monitor real users/frontend experience                 |
+| **Synthetic**         | Simulated users/requests                               |
+| **RUM SDK**           | Sends browser telemetry to Datadog                     |
+| **RUM Explorer**      | Investigate user sessions/events                       |
+| **APM**               | Monitor backend application performance                |
+| **APM Services**      | View monitored application services                    |
+| **APM Trace**         | Follow request across services                         |
+| **Linux APM**         | Agent + application tracer/SSI                         |
+| **Windows APM**       | Agent + .NET/Java instrumentation                      |
+| **Docker APM**        | Agent container + application tracer                   |
+| **RUM + APM**         | Correlate frontend experience with backend performance |
+
+### Easy way to remember
+
+```text
+Infrastructure
+      ↓
+Host / VM / Docker
+      ↓
+Datadog Agent
+```
+
+```text
+Frontend
+      ↓
+RUM
+      ↓
+Real User Experience
+```
+
+```text
+Backend Application
+      ↓
+APM
+      ↓
+Services → Traces → Errors → Dependencies
+```
+
+```text
+Synthetic
+      ↓
+Simulated User/API Request
+      ↓
+Availability + Performance
+```
+
+[Datadog RUM documentation](https://docs.datadoghq.com/real_user_monitoring/?utm_source=chatgpt.com)
+[Datadog APM documentation](https://docs.datadoghq.com/tracing/?utm_source=chatgpt.com)
+[Datadog Docker monitoring documentation](https://docs.datadoghq.com/containers/docker/?utm_source=chatgpt.com)
+
+[1]: https://docs.datadoghq.com/containers/docker/?utm_source=chatgpt.com "Docker Agent for Docker, containerd, and Podman"
+[2]: https://docs.datadoghq.com/real_user_monitoring/?utm_source=chatgpt.com "RUM & Session Replay"
+[3]: https://docs.datadoghq.com/real_user_monitoring/application_monitoring/browser/setup/?utm_source=chatgpt.com "Browser Monitoring Setup"
+[4]: https://docs.datadoghq.com/real_user_monitoring/guide/define-services-and-track-ui-components-in-your-browser-application/?utm_source=chatgpt.com "Define Services And Track UI Components In Your Browser Application"
+[5]: https://docs.datadoghq.com/real_user_monitoring/platform/dashboards/?utm_source=chatgpt.com "RUM Dashboards"
+[6]: https://docs.datadoghq.com/getting_started/tracing/?utm_source=chatgpt.com "Getting Started with APM Tracing"
+[7]: https://docs.datadoghq.com/tracing/trace_collection/single-step-apm/linux/?utm_source=chatgpt.com "Single Step APM Instrumentation on Linux"
+[8]: https://docs.datadoghq.com/tracing/trace_collection/dd_libraries/java/?utm_source=chatgpt.com "Tracing Java Applications"
+[9]: https://docs.datadoghq.com/tracing/trace_collection/compatibility/dotnet-core/?utm_source=chatgpt.com ".NET and .NET Core Compatibility Requirements"
+[10]: https://docs.datadoghq.com/tracing/trace_collection/single-step-apm/windows/?utm_source=chatgpt.com "Single Step APM Instrumentation on Windows"
+[11]: https://docs.datadoghq.com/tracing/trace_collection/single-step-apm/troubleshooting/?utm_source=chatgpt.com "Troubleshooting Single Step APM"
+[12]: https://docs.datadoghq.com/containers/docker/apm/?utm_source=chatgpt.com "Tracing Docker Applications"
+
+# Datadog — Dashboard Creation
+
+## 1. What is a Dashboard?
+
+A Datadog **Dashboard** is a visual workspace that combines metrics, logs, traces, RUM, monitors, SLOs, and other telemetry in one place. It is useful for monitoring the health of infrastructure and applications from a single screen. ([Datadog Monitoring][1])
+
+Example:
+
+```text
+                 Production Dashboard
+                        |
+        +---------------+---------------+
+        |               |               |
+       CPU            Memory          Disk
+        |               |               |
+      65%             72%              81%
+        |
+   Application
+        |
+   +----+----+---------+
+   |         |         |
+Latency    Errors   Throughput
+```
+
+---
+
+# 2. Create a New Dashboard
+
+### Path
+
+```text
+Dashboards → New Dashboard
+```
+
+Give it a name.
+
+Example:
+
+```text
+Production Infrastructure Dashboard
+```
+
+Then click **Create Dashboard**.
+
+Datadog also provides out-of-the-box dashboards for integrations, which can be cloned and customized. ([Datadog Monitoring][2])
+
+---
+
+# 3. Add a Widget
+
+After creating the dashboard:
+
+```text
+Dashboard
+   ↓
+Add Widget
+```
+
+Datadog provides widgets such as:
+
+* Timeseries
+* Query Value
+* Table
+* Top List
+* Hostmap
+* Heatmap
+* Log Stream
+* Monitor Summary
+* Service Summary
+* SLO Summary
+* Alert Graph
+* Event Stream
+* Topology Map
+
+([Datadog Monitoring][2])
+
+---
+
+# 4. Create CPU Monitoring Widget
+
+### Step 1
+
+Click:
+
+```text
+Add Widget → Timeseries
+```
+
+### Step 2 — Select Metric
+
+Example:
+
+```text
+system.cpu.user
+```
+
+### Step 3 — Filter
+
+For production:
+
+```text
+env:production
+```
+
+### Step 4 — Group By
+
+```text
+host
+```
+
+Example:
+
+```text
+system.cpu.user{env:production} by {host}
+```
+
+### Step 5
+
+Give the widget a name:
+
+```text
+Production CPU Utilization
+```
+
+Click **Save**.
+
+Datadog widgets support metric queries, filters, grouping and visualization settings. ([Datadog Monitoring][2])
+
+---
+
+# 5. Add Memory Widget
+
+Create another **Timeseries** widget.
+
+Metric example:
+
+```text
+system.mem.used
+```
+
+Filter:
+
+```text
+env:production
+```
+
+Group:
+
+```text
+host
+```
+
+Name:
+
+```text
+Production Memory Usage
+```
+
+---
+
+# 6. Add Disk Widget
+
+Example:
+
+```text
+system.disk.used
+```
+
+Filter:
+
+```text
+env:production
+```
+
+Group by:
+
+```text
+host
+```
+
+Dashboard:
+
+```text
+Production Infrastructure
+--------------------------------
+CPU          Memory        Disk
+65%          72%           81%
+
+CPU Trend                  Memory Trend
+[ Graph ]                  [ Graph ]
+
+Disk Trend                 Host Status
+[ Graph ]                  [ Table ]
+```
+
+---
+
+# 7. Query Value Widget
+
+Use **Query Value** when you want to display one important number.
+
+Example:
+
+```text
+Active Hosts
+```
+
+or:
+
+```text
+Total Errors
+```
+
+or:
+
+```text
+Current CPU
+```
+
+Example:
+
+```text
++----------------------+
+| Production Hosts     |
+|                      |
+|         42           |
++----------------------+
+```
+
+This is useful for KPI-style dashboards. Datadog lists Query Value among its dashboard widgets. ([Datadog Monitoring][3])
+
+---
+
+# 8. Monitor Summary Widget
+
+You can put monitor status directly on a dashboard.
+
+```text
+Add Widget
+    ↓
+Monitor Summary
+```
+
+Example:
+
+```text
+Production Monitors
+--------------------------------
+CPU High             OK
+Memory High          ALERT
+Disk High            OK
+API Availability     OK
+Website Synthetic    WARN
+```
+
+This is useful for an **operations/NOC dashboard** because you can see monitor status without opening the full Monitors page. Datadog's Monitor Summary widget can display monitor status and can be filtered to a subset of monitors. ([Datadog Monitoring][4])
+
+---
+
+# 9. APM Dashboard
+
+You can combine infrastructure and APM information in one dashboard.
+
+Example widgets:
+
+```text
+APM Production Dashboard
+--------------------------------------
+
+Request Throughput
+[========================]
+
+Request Latency
+[========================]
+
+Error Rate
+[========================]
+
+CPU
+[========================]
+
+Memory
+[========================]
+
+Database Latency
+[========================]
+```
+
+Useful APM metrics include:
+
+```text
+Request Rate
+Latency
+Error Rate
+Database Latency
+Service Dependencies
+```
+
+Datadog specifically supports dashboards that correlate APM metrics with infrastructure metrics such as host memory and other telemetry. ([Datadog Monitoring][5])
+
+---
+
+# 10. RUM Dashboard
+
+You can create a dashboard for frontend/user experience.
+
+Example:
+
+```text
+RUM Dashboard
+--------------------------------
+
+Page Views
+Active Users
+Session Count
+
+Page Load Time
+LCP
+INP
+CLS
+
+JavaScript Errors
+
+API Error Rate
+
+Top Affected Pages
+```
+
+Datadog dashboards can combine RUM data with metrics, logs, traces and other sources. ([Datadog Monitoring][2])
+
+---
+
+# 11. Add Logs to Dashboard
+
+You can add a **Log Stream** widget.
+
+```text
+Add Widget
+    ↓
+Log Stream
+```
+
+Example query:
+
+```text
+service:payment-api env:production status:error
+```
+
+Dashboard shows:
+
+```text
+Timestamp       Service       Error
+------------------------------------------------
+10:01           payment-api   DB timeout
+10:04           payment-api   HTTP 500
+10:07           payment-api   Connection error
+```
+
+This allows infrastructure, application metrics and logs to be viewed together.
+
+---
+
+# 12. Dashboard Template Variables
+
+Template variables make a dashboard reusable.
+
+Instead of creating separate dashboards for:
+
+```text
+Production
+Development
+QA
+```
+
+create one dashboard with:
+
+```text
+env = production
+```
+
+and allow the user to select:
+
+```text
+env
+ ├── production
+ ├── staging
+ └── development
+```
+
+Datadog supports template variables for dynamically changing the scope of dashboard widgets. ([Datadog Monitoring][1])
+
+Example:
+
+```text
+$env
+$service
+$host
+```
+
+Then your metric can conceptually use:
+
+```text
+system.cpu.user{$env}
+```
+
+---
+
+# 13. Dashboard Tabs
+
+For a large dashboard, use tabs.
+
+Example:
+
+```text
+Production Dashboard
+
+[Infrastructure] [APM] [RUM] [Logs] [Monitors]
+```
+
+Inside:
+
+### Infrastructure
+
+```text
+CPU
+Memory
+Disk
+Network
+Hosts
+Containers
+```
+
+### APM
+
+```text
+Latency
+Throughput
+Errors
+Services
+Dependencies
+```
+
+### RUM
+
+```text
+Users
+Page Load
+Core Web Vitals
+Frontend Errors
+```
+
+Datadog currently supports dashboard tabs to organize widgets into sections. ([Datadog Monitoring][6])
+
+---
+
+# 14. Dashboard Example — Production Monitoring
+
+A practical dashboard could look like:
+
+```text
+==================================================
+          PRODUCTION MONITORING DASHBOARD
+==================================================
+
+                    OVERVIEW
+
+  Hosts       CPU       Memory      Errors
+    25        64%         71%          12
+
+
+--------------------------------------------------
+                 INFRASTRUCTURE
+
+ CPU Usage              Memory Usage
+ [============]         [=============]
+
+ Disk Usage             Network
+ [=========== ]         [=============]
+
+
+--------------------------------------------------
+                     APM
+
+ Request Rate           Response Time
+ [=============]        [=============]
+
+ Error Rate             Service Health
+ [=============]        [=============]
+
+
+--------------------------------------------------
+                     RUM
+
+ Active Users           Page Load Time
+ [=============]        [=============]
+
+ JS Errors              Core Web Vitals
+ [=============]        [=============]
+
+
+--------------------------------------------------
+                   MONITORS
+
+ CPU Alert              OK
+ Memory Alert           OK
+ API Synthetic          ALERT
+ Host Down              OK
+
+==================================================
+```
+
+---
+
+# 15. Dashboard → Create Monitor
+
+A useful feature: from a graph widget, you can use the widget's menu to **Create Monitor**. Datadog can use the widget's query to preconfigure the monitor. ([Datadog Monitoring][7])
+
+```text
+Widget
+  ↓
+⋮
+  ↓
+Create Monitor
+  ↓
+Configure Threshold
+  ↓
+Notification
+  ↓
+Create Monitor
+```
+
+This is useful when you first visualize a metric and then decide that it needs an alert.
+
+---
+
+# 16. Dashboard Sharing
+
+You can share dashboards with your team and configure permissions. Datadog also supports dashboard links and external sharing options depending on organization settings. ([Datadog Monitoring][1])
+
+Typical options:
+
+```text
+Team Dashboard
+     ↓
+Infrastructure Team
+     ↓
+DevOps Team
+     ↓
+Application Team
+```
+
+---
+
+# 17. Dashboard JSON
+
+Datadog dashboards and widgets have JSON representations.
+
+You can open a widget:
+
+```text
+Widget
+  ↓
+Edit
+  ↓
+JSON
+```
+
+You can also use the **Dashboards API** to create dashboards programmatically. ([Datadog Monitoring][8])
+
+Example use case:
+
+```text
+Terraform / API / Automation
+            ↓
+       Create Dashboard
+            ↓
+       Add Widgets
+            ↓
+       Production View
+```
+
+---
+
+# Interview Quick Revision
+
+| Question                   | Answer                                         |
+| -------------------------- | ---------------------------------------------- |
+| What is Dashboard?         | Centralized visualization of Datadog telemetry |
+| Create Dashboard?          | `Dashboards → New Dashboard`                   |
+| Add graph?                 | `Add Widget → Timeseries`                      |
+| Single KPI?                | `Query Value`                                  |
+| Monitor status?            | `Monitor Summary`                              |
+| Logs?                      | `Log Stream`                                   |
+| Infrastructure?            | CPU, memory, disk, network, hosts              |
+| APM?                       | Latency, throughput, errors, services          |
+| RUM?                       | Users, page performance, frontend errors       |
+| Dynamic filtering?         | Template Variables                             |
+| Large dashboard?           | Tabs                                           |
+| Automate dashboard?        | Dashboard API / JSON                           |
+| Create monitor from graph? | Widget `⋮ → Create Monitor`                    |
+
+### Simple architecture
+
+```text
+                    Datadog Dashboard
+                           |
+       +-------------------+-------------------+
+       |                   |                   |
+   Infrastructure          APM                RUM
+       |                   |                   |
+ CPU / Memory          Services / Traces    Users / Pages
+ Hosts / Docker        Latency / Errors     Errors / UX
+       |                   |                   |
+       +-------------------+-------------------+
+                           |
+                         Logs
+                           |
+                       Monitors
+```
+
+[Datadog Dashboard documentation](https://docs.datadoghq.com/dashboards/?utm_source=chatgpt.com)
+
+[1]: https://docs.datadoghq.com/getting_started/dashboards/?utm_source=chatgpt.com "Getting Started with Dashboards"
+[2]: https://docs.datadoghq.com/dashboards/widgets/?lang_pref=en&utm_source=chatgpt.com "Widgets"
+[3]: https://docs.datadoghq.com/dashboards/widgets/types/?utm_source=chatgpt.com "Widget Types"
+[4]: https://docs.datadoghq.com/api/latest/dashboards/create-a-new-dashboard/?utm_source=chatgpt.com "Create a new dashboard"
+[5]: https://docs.datadoghq.com/tracing/guide/apm_dashboard/?utm_source=chatgpt.com "Create a Dashboard to track and correlate APM metrics"
+[6]: https://docs.datadoghq.com/dashboards/configure/?utm_source=chatgpt.com "Configure"
+[7]: https://docs.datadoghq.com/dashboards/widgets/configuration/?utm_source=chatgpt.com "Widget Configuration"
+[8]: https://docs.datadoghq.com/dashboards/guide/graphing_json/?utm_source=chatgpt.com "Graphing with JSON"
